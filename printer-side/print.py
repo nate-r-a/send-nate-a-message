@@ -5,6 +5,8 @@ import re
 import cStringIO
 from PIL import Image
 
+# TODO: Edit zj-58 driver to make the media size smaller?
+
 def print_messages():
     print("hello")
     r = requests.get("http://localhost:3001/messages")
