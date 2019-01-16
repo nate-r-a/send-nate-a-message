@@ -1,8 +1,13 @@
 class MessagesController < ApplicationController
-  skip_before_action :verify_authenticity_token, only: :destroy
+  skip_before_action :verify_authenticity_token, only: [:create, :destroy]
+
+  def home; end
 
   def create
-    Message.create(params[:message])
+    Message.create(message_params)
+
+    flash[:notice] = "Thanks! Your message should be printed shortly."
+    redirect_to root_path
   end
 
   def index
@@ -16,5 +21,11 @@ class MessagesController < ApplicationController
   def destroy
     message = Message.find(params[:id])
     message.destroy
+  end
+
+  private
+
+  def message_params
+    params.require(:message).permit(:text, :image)
   end
 end

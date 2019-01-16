@@ -12,8 +12,6 @@ def print_messages():
         print(message["image"])
         requests.delete("http://localhost:3001/messages/%s" %(id))
 
-    requests
-
 schedule.every(5).seconds.do(print_messages)
 
 while True:
