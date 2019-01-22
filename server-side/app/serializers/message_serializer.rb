@@ -1,3 +1,3 @@
 class MessageSerializer < ActiveModel::Serializer
-  attributes :id, :sanitized_text, :image
+  attributes :id, :text, :image
 end

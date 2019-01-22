@@ -1,0 +1,90 @@
+<head>
+  <script src="https://use.fontawesome.com/65d9fe91cb.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+  <!-- <link type="text/javascript" href="jquery-3.2.1.min.js"> -->
+  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.3.0/milligram.css">
+</head>
+<body style="text-align: center">
+  <% flash.each do |key, value| %>
+    <div class="alert alert-<%= key %>"><%= value %></div>
+  <% end %>
+
+  <h1>Send Nate a message!</h1>
+  <h6>Please don't hack me</h6>
+  <canvas id="draw" style="border: 2px solid black"></canvas>
+  <br>
+  <input id="text-message" type="text" name="" value="" placeholder="Enter a text message here (not working currently!)" style="width: 500px; display: none;">
+  <br>
+  <input type="submit" name="submit" value="Send!" onclick="submitMessage()">
+
+</body>
+
+<script type="text/javascript">
+  var canvas = document.querySelector('#draw');
+  canvas.width = 500;
+  canvas.height = 500;
+  var context = canvas.getContext('2d');
+  context.fillStyle = "#ffffff";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  // context.translate(0, 0.5);
+
+  context.strokeStyle = '#000000';
+  context.lineJoin = 'round';
+  context.lineCap = 'round';
+  context.lineWidth = 4.5;
+
+
+  var isDrawing = false;
+  var lastX = 0;
+  var lastY = 0;
+
+  function draw(e) {
+    if(!isDrawing) return;
+    context.beginPath();
+    context.moveTo(lastX, lastY);
+    context.lineTo(e.offsetX, e.offsetY);
+    context.stroke();
+    lastX = e.offsetX;
+    lastY = e.offsetY;
+  }
+
+  canvas.addEventListener('mousedown', (e) => {
+    isDrawing = true;
+    lastX = e.offsetX;
+    lastY = e.offsetY;
+  });
+  canvas.addEventListener('mousemove', draw);
+  canvas.addEventListener('mouseup', () => {
+    isDrawing = false;
+  });
+  canvas.addEventListener('mouseout', () => isDrawing = false);
+
+  // Prevent scrolling when touching the canvas
+  document.body.addEventListener("touchstart", function (e) {
+    if (e.target == canvas) {
+      e.preventDefault();
+    }
+  }, false);
+  document.body.addEventListener("touchend", function (e) {
+    if (e.target == canvas) {
+      e.preventDefault();
+    }
+  }, false);
+  document.body.addEventListener("touchmove", function (e) {
+    if (e.target == canvas) {
+      e.preventDefault();
+    }
+  }, false);
+
+  function submitMessage() {
+    $.ajax({
+      url: "/messages",
+      type: "POST",
+      data: { message: {
+        text: $("#text-message").val(),
+        image: canvas.toDataURL()
+      }}
+    })
+  }
+</script>
