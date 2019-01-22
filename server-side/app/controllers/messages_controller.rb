@@ -6,7 +6,7 @@ class MessagesController < ApplicationController
   def create
     Message.create(message_params)
 
-    flash[:notice] = "Thanks! Your message should be printed shortly."
+    flash[:notice] = "Thanks! Your message should be printed shortly. You may need to refresh to submit another picture."
     redirect_to root_path
   end
 

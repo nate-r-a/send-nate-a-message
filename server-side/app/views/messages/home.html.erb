@@ -25,7 +25,7 @@
   <h1>Send Nate a message!</h1>
   <h6>Please don't hack me</h6>
   <br>
-  <input id="text-message" type="text" name="" value="" placeholder="Enter a text message here (not working currently!)" style="width: 500px;">
+  <input id="text-message" type="text" name="" value="" placeholder="Enter a text message here" style="width: 500px;">
   <br>
   Tool:
     <select style="width: 100px;" id="tool">
@@ -64,6 +64,8 @@
 
       // Good. Now we need to get access to context element
       var context = canvas.getContext('2d');
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, canvas.width, canvas.height);
       context.strokeStyle = "#000";
       context.lineJoin = "round";
       context.lineWidth = 5;
