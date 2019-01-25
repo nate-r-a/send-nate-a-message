@@ -5,7 +5,6 @@
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.3.0/milligram.css">
 
   <script src="https://unpkg.com/konva@2.4.2/konva.min.js"></script>
-  <%# <%= javascript_include_tag('canvas-dither.js') %> %>
 
   <style media="screen">
     .konvajs-content {
@@ -14,6 +13,10 @@
 
     canvas {
       outline: 2px solid black;
+    }
+
+    span {
+      cursor: pointer;
     }
   </style>
 
@@ -26,9 +29,12 @@
   <h1>Send Nate a message!</h1>
   <h6>Please don't hack me</h6>
   <br>
-  <input id="text-message" type="text" name="" value="" placeholder="Enter a text message here" style="width: 500px;">
+  <input id="text-message" type="text" name="" value="" placeholder="Enter a text message here (optional)" style="width: 500px;">
   <br>
-  <div class="draw-a-picture" style="display: none">
+
+  <div><span onclick="showDraw()"><strong>Click here</strong></span> to draw a picture, or <span onclick="showUpload()"><strong>click here</strong></span> to upload an image</div>
+
+  <div id="draw-a-picture">
     Tool:
     <select style="width: 100px;" id="tool">
       <option value="brush">Brush</option>
@@ -52,6 +58,7 @@
 
       // then we are going to draw into special canvas element
       var canvas = document.createElement('canvas');
+      canvas.setAttribute("id", "drawCanvas");
       canvas.width = stage.width();
       canvas.height = stage.height();
 
@@ -139,16 +146,15 @@
 
     </script>
   </div>
-  <div class="upload-a-picture">
-    <label>Upload an image:</label><br/>
+  <div id="upload-a-picture">
     <input type="file" id="imageLoader" name="imageLoader"/>
     <br>
     <canvas id="imageCanvas" width="500" height="500"></canvas>
     <script>
       var imageLoader = document.getElementById('imageLoader');
       imageLoader.addEventListener('change', handleImage, false);
-      var canvas = document.getElementById('imageCanvas');
-      var ctx = canvas.getContext('2d');
+      var imageCanvas = document.getElementById('imageCanvas');
+      var ctx = imageCanvas.getContext('2d');
 
       function handleImage(e){
         var reader = new FileReader();
@@ -172,14 +178,14 @@
               console.log(img.height);
             }
 
-            canvas.width = img.width;
-            canvas.height = img.height;
+            imageCanvas.width = img.width;
+            imageCanvas.height = img.height;
             ctx.drawImage(img, 0, 0, img.width, img.height);
 
             // Convert to gray here
-            imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            imageData = ctx.getImageData(0, 0, imageCanvas.width, imageCanvas.height);
             var cd = new CanvasDither();
-            grayImage = cd.grayscale(imageData)
+            grayImage = cd.floydsteinberg(imageData)
             ctx.putImageData(grayImage, 0, 0);
           }
           img.src = event.target.result;
@@ -192,17 +198,40 @@
     <br>
     <input type="submit" name="submit" value="Send!" onclick="submitMessage()">
 
-  </body>
+</body>
 
-  <script type="text/javascript">
-    function submitMessage() {
-      $.ajax({
-        url: "/messages",
-        type: "POST",
-        data: { message: {
-          text: $("#text-message").val(),
-          image: canvas.toDataURL()
-        }}
-      })
+<script type="text/javascript">
+  $("#draw-a-picture").hide();
+  $("#upload-a-picture").hide();
+  var upload = false;
+
+  showDraw = () => {
+    $("#draw-a-picture").show();
+    $("#upload-a-picture").hide();
+    upload = false;
+  }
+
+  showUpload = () => {
+    $("#draw-a-picture").hide();
+    $("#upload-a-picture").show();
+    upload = true;
+  }
+
+  function submitMessage() {
+    var canvasData;
+    if (upload) {
+      canvasData = document.getElementById("imageCanvas").toDataURL();
+    } else {
+      canvasData = canvas.toDataURL();
     }
-  </script>
+    $.ajax({
+      url: "/messages",
+      type: "POST",
+      data: { message: {
+        text: $("#text-message").val(),
+        image: canvasData
+      }}
+    })
+    console.log(canvasData)
+  }
+</script>
