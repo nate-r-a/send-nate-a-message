@@ -1,5 +1,5 @@
 class MessagesController < ApplicationController
-  skip_before_action :verify_authenticity_token, only: [:create, :destroy]
+  skip_before_action :verify_authenticity_token, only: :destroy
 
   def home; end
 
@@ -11,11 +11,16 @@ class MessagesController < ApplicationController
   end
 
   def index
-    render json: Message.all
+    render json: Message.unprinted
   end
 
   def show
     render json: Message.find(params[:id])
+  end
+
+  def update
+    message = Message.find(params[:id])
+    message.update(message_params)
   end
 
   def destroy
@@ -26,6 +31,6 @@ class MessagesController < ApplicationController
   private
 
   def message_params
-    params.require(:message).permit(:text, :image)
+    params.require(:message).permit(:text, :image, :printed)
   end
 end

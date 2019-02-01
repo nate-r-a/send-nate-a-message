@@ -1,4 +1,5 @@
 <head>
+  <title>Send Nate a Message</title>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
   <!-- <link type="text/javascript" href="jquery-3.2.1.min.js"> -->
@@ -29,10 +30,12 @@
   <h1>Send Nate a message!</h1>
   <h6>Please don't hack me</h6>
   <br>
-  <input id="text-message" type="text" name="" value="" placeholder="Enter a text message here (optional)" style="width: 500px;">
+  <input id="text-message" type="text" name="" value="" placeholder="Enter a text message here (optional)" style="width: 384px;">
   <br>
 
   <div><span onclick="showDraw()"><strong>Click here</strong></span> to draw a picture, or <span onclick="showUpload()"><strong>click here</strong></span> to upload an image</div>
+
+  <!-- <img src="https://media.giphy.com/media/S5JSwmQYHOGMo/giphy.gif" alt=""> -->
 
   <div id="draw-a-picture">
     Tool:
@@ -42,8 +45,8 @@
     </select>
     <div id="container"></div>
     <script>
-      var width = 500;
-      var height = 500;
+      var width = 384;
+      var height = 384;
 
       // first we need Konva core things: stage and layer
       var stage = new Konva.Stage({
@@ -149,12 +152,24 @@
   <div id="upload-a-picture">
     <input type="file" id="imageLoader" name="imageLoader"/>
     <br>
-    <canvas id="imageCanvas" width="500" height="500"></canvas>
+    <canvas id="imageCanvas" width="384" height="384"></canvas>
+    <canvas id="thresholdCanvas" width="384" height="384"></canvas>
+    <canvas id="bayerCanvas" width="384" height="384"></canvas>
+    <canvas id="atkinsonCanvas" width="384" height="384"></canvas>
+
     <script>
       var imageLoader = document.getElementById('imageLoader');
       imageLoader.addEventListener('change', handleImage, false);
+
       var imageCanvas = document.getElementById('imageCanvas');
-      var ctx = imageCanvas.getContext('2d');
+      var thresholdCanvas = document.getElementById('thresholdCanvas');
+      var bayerCanvas = document.getElementById('bayerCanvas');
+      var atkinsonCanvas = document.getElementById('atkinsonCanvas');
+
+      var imageContext = imageCanvas.getContext('2d');
+      var thresholdContext = thresholdCanvas.getContext('2d');
+      var bayerContext = bayerCanvas.getContext('2d');
+      var atkinsonContext = atkinsonCanvas.getContext('2d');
 
       function handleImage(e){
         var reader = new FileReader();
@@ -165,28 +180,30 @@
             console.log(img.width);
             console.log(img.height);
             if (img.width > img.height) {
-              let coeff = img.width / 500;
-              img.width = 500;
+              let coeff = img.width / 384;
+              img.width = 384;
               img.height = img.height / coeff;
-              console.log(img.width);
-              console.log(img.height);
             } else if (img.height > img.width) {
-              let coeff = img.height / 500;
-              img.height = 500;
+              let coeff = img.height / 384;
+              img.height = 384;
               img.width = img.width / coeff;
-              console.log(img.width);
-              console.log(img.height);
             }
 
-            imageCanvas.width = img.width;
-            imageCanvas.height = img.height;
-            ctx.drawImage(img, 0, 0, img.width, img.height);
+            imageCanvas.width = thresholdCanvas = bayerCanvas = atkinsonCanvas = img.width;
+            imageCanvas.height = thresholdCanvas = bayerCanvas = atkinsonCanvas = img.height;
+            imageContext.drawImage(img, 0, 0, img.width, img.height);
 
-            // Convert to gray here
-            imageData = ctx.getImageData(0, 0, imageCanvas.width, imageCanvas.height);
+            imageData = imageContext.getImageData(0, 0, imageCanvas.width, imageCanvas.height);
+
             var cd = new CanvasDither();
-            grayImage = cd.floydsteinberg(imageData)
-            ctx.putImageData(grayImage, 0, 0);
+            atkinsonImage = cd.atkinson(imageData);
+            thresholdImage = cd.threshold(imageData, 125);
+            bayerImage = cd.bayer(imageData, 125);
+            console.log(thresholdImage, bayerImage, atkinsonImage)
+
+            thresholdContext.putImageData(thresholdImage, 0, 0, img.width, img.height);
+            bayerContext.putImageData(bayerImage, 0, 0, img.width, img.height);
+            atkinsonContext.putImageData(atkinsonImage, 0, 0, img.width, img.height);
           }
           img.src = event.target.result;
         }
@@ -196,7 +213,7 @@
   </div>
 
     <br>
-    <input type="submit" name="submit" value="Send!" onclick="submitMessage()">
+    <!-- <input type="submit" name="submit" value="Send!" onclick="submitMessage()"> -->
 
 </body>
 
@@ -227,6 +244,7 @@
     $.ajax({
       url: "/messages",
       type: "POST",
+      beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
       data: { message: {
         text: $("#text-message").val(),
         image: canvasData
