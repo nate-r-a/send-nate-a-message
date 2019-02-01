@@ -272,7 +272,7 @@
   </div>
 
     <br>
-    <!-- <input type="submit" name="submit" value="Send!" onclick="submitMessage()"> -->
+    <input type="submit" name="submit" value="Send!" onclick="submitMessage()">
 
 </body>
 
@@ -296,19 +296,22 @@
   function submitMessage() {
     var canvasData;
     if (upload) {
-      canvasData = document.getElementById("imageCanvas").toDataURL();
+      canvasData = document.getElementById("atkinsonCanvas").toDataURL();
+      var image = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+      window.location.href=image; // it will save locally
+
     } else {
       canvasData = canvas.toDataURL();
     }
-    $.ajax({
-      url: "/messages",
-      type: "POST",
-      beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
-      data: { message: {
-        text: $("#text-message").val(),
-        image: canvasData
-      }}
-    })
-    console.log(canvasData)
+    // $.ajax({
+    //   url: "/messages",
+    //   type: "POST",
+    //   beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
+    //   data: { message: {
+    //     text: $("#text-message").val(),
+    //     image: canvasData
+    //   }}
+    // })
+    // console.log(canvasData)
   }
 </script>
