@@ -153,9 +153,9 @@
     <input type="file" id="imageLoader" name="imageLoader"/>
     <br>
     <canvas id="imageCanvas" width="384" height="384"></canvas>
+    <canvas id="atkinsonCanvas" width="384" height="384"></canvas>
     <canvas id="thresholdCanvas" width="384" height="384"></canvas>
     <canvas id="bayerCanvas" width="384" height="384"></canvas>
-    <canvas id="atkinsonCanvas" width="384" height="384"></canvas>
 
     <script>
       var imageLoader = document.getElementById('imageLoader');
@@ -177,8 +177,8 @@
           var img = new Image();
 
           img.onload = function(){
-            console.log(img.width);
-            console.log(img.height);
+            // console.log(img.width);
+            // console.log(img.height);
             if (img.width > img.height) {
               let coeff = img.width / 384;
               img.width = 384;
@@ -189,21 +189,24 @@
               img.width = img.width / coeff;
             }
 
-            imageCanvas.width = thresholdCanvas = bayerCanvas = atkinsonCanvas = img.width;
-            imageCanvas.height = thresholdCanvas = bayerCanvas = atkinsonCanvas = img.height;
+            imageCanvas.width = thresholdCanvas.width = bayerCanvas.width = atkinsonCanvas.width = img.width;
+            imageCanvas.height = thresholdCanvas.height = bayerCanvas.height = atkinsonCanvas.height = img.height;
             imageContext.drawImage(img, 0, 0, img.width, img.height);
 
-            imageData = imageContext.getImageData(0, 0, imageCanvas.width, imageCanvas.height);
+            i1 = imageContext.getImageData(0, 0, imageCanvas.width, imageCanvas.height);
+            i2 = imageContext.getImageData(0, 0, imageCanvas.width, imageCanvas.height);
+            i3= imageContext.getImageData(0, 0, imageCanvas.width, imageCanvas.height);
 
-            var cd = new CanvasDither();
-            atkinsonImage = cd.atkinson(imageData);
-            thresholdImage = cd.threshold(imageData, 125);
-            bayerImage = cd.bayer(imageData, 125);
-            console.log(thresholdImage, bayerImage, atkinsonImage)
+            atkinsonImage = new CanvasDither().atkinson(i1);
+            thresholdImage = new CanvasDither().threshold(i2, 100);
+            bayerImage = new CanvasDither().bayer(i3, 80);
 
-            thresholdContext.putImageData(thresholdImage, 0, 0, img.width, img.height);
-            bayerContext.putImageData(bayerImage, 0, 0, img.width, img.height);
-            atkinsonContext.putImageData(atkinsonImage, 0, 0, img.width, img.height);
+            atkinsonContext.putImageData(atkinsonImage, 0, 0, 0, 0, img.width, img.height);
+            thresholdContext.putImageData(thresholdImage, 0, 0, 0, 0, img.width, img.height);
+            bayerContext.putImageData(bayerImage, 0, 0, 0, 0, img.width, img.height);
+
+            // console.log(thresholdImage, bayerImage, atkinsonImage)
+
           }
           img.src = event.target.result;
         }
