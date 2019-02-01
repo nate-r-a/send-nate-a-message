@@ -1,9 +1,10 @@
 <head>
-  <title>Send Nate a Message</title>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
   <!-- <link type="text/javascript" href="jquery-3.2.1.min.js"> -->
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.3.0/milligram.css">
+  <link rel="stylesheet" href="omni-slider.min.css">
+  <!-- <script type="text/javascript" src="omni-slider.min.js"></script> -->
 
   <script src="https://unpkg.com/konva@2.4.2/konva.min.js"></script>
 
@@ -14,10 +15,20 @@
 
     canvas {
       outline: 2px solid black;
+      margin: 10px;
     }
 
     span {
       cursor: pointer;
+    }
+
+    .slider {
+      width: 300px !important;
+      margin: 8px auto 20px;
+    }
+
+    .slider-circle {
+      display: none !important;
     }
   </style>
 
@@ -152,10 +163,55 @@
   <div id="upload-a-picture">
     <input type="file" id="imageLoader" name="imageLoader"/>
     <br>
-    <canvas id="imageCanvas" width="384" height="384"></canvas>
-    <canvas id="atkinsonCanvas" width="384" height="384"></canvas>
-    <canvas id="thresholdCanvas" width="384" height="384"></canvas>
-    <canvas id="bayerCanvas" width="384" height="384"></canvas>
+    <div>
+      <canvas id="imageCanvas" width="384" height="384"></canvas>
+      <canvas id="atkinsonCanvas" width="384" height="384"></canvas>
+    </div>
+    <div>
+      <canvas id="thresholdCanvas" width="384" height="384"></canvas>
+      <div id="threshold-slider"></div>
+      <canvas id="bayerCanvas" width="384" height="384"></canvas>
+      <div id="bayer-slider"></div>
+    </div>
+
+    <script>
+      options = {
+          isOneWay: true,
+          isDate: false,
+          min: 1,
+          max: 255,
+          start: 130
+      };
+      var thresholdSlider = new Slider(document.getElementById('threshold-slider'), options);
+
+      options = {
+          isOneWay: true,
+          isDate: false,
+          min: 1,
+          max: 255,
+          start: 130
+      };
+      var bayerSlider = new Slider(document.getElementById('bayer-slider'), options);
+
+      //  TODO: REFACTOR THIS MESS
+      thresholdSlider.subscribe('moving', function(data) {
+        console.log(data.right);
+        var thresholdCanvas = document.getElementById('thresholdCanvas');
+        var thresholdContext = thresholdCanvas.getContext('2d');
+        i2 = imageContext.getImageData(0, 0, imageCanvas.width, imageCanvas.height);
+        thresholdImage = new CanvasDither().threshold(i2, data.right);
+        thresholdContext.putImageData(thresholdImage, 0, 0);
+      });
+
+      bayerSlider.subscribe('moving', function(data) {
+        console.log(data.right);
+        var bayerCanvas = document.getElementById('bayerCanvas');
+        var bayerContext = bayerCanvas.getContext('2d');
+        i2 = imageContext.getImageData(0, 0, imageCanvas.width, imageCanvas.height);
+        bayerImage = new CanvasDither().bayer(i2, data.right);
+        bayerContext.putImageData(bayerImage, 0, 0);
+      });
+    </script>
 
     <script>
       var imageLoader = document.getElementById('imageLoader');
@@ -195,11 +251,11 @@
 
             i1 = imageContext.getImageData(0, 0, imageCanvas.width, imageCanvas.height);
             i2 = imageContext.getImageData(0, 0, imageCanvas.width, imageCanvas.height);
-            i3= imageContext.getImageData(0, 0, imageCanvas.width, imageCanvas.height);
+            i3 = imageContext.getImageData(0, 0, imageCanvas.width, imageCanvas.height);
 
             atkinsonImage = new CanvasDither().atkinson(i1);
             thresholdImage = new CanvasDither().threshold(i2, 100);
-            bayerImage = new CanvasDither().bayer(i3, 80);
+            bayerImage = new CanvasDither().bayer(i3, 140);
 
             atkinsonContext.putImageData(atkinsonImage, 0, 0, 0, 0, img.width, img.height);
             thresholdContext.putImageData(thresholdImage, 0, 0, 0, 0, img.width, img.height);
