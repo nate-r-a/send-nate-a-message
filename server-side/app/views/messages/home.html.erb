@@ -295,6 +295,8 @@
   <br>
   <input id="text-message" type="text" name="" value="" placeholder="Enter a text message here (if you want)" style="width: 600px;">
   <br>
+  <input type="checkbox" id="private" name="private" value="true"> Don't make this message public
+  <br>
   <input type="submit" name="submit" value="Send!" onclick="submitMessage()">
 </body>
 
@@ -336,15 +338,19 @@
     } else {
       canvasData = canvas.toDataURL();
     }
+
+    var private
+
     $.ajax({
       url: "/messages",
       type: "POST",
       beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
       data: { message: {
         text: $("#text-message").val(),
-        image: canvasData
+        image: canvasData,
+        private: document.getElementById("private").checked
       }}
     })
-    // console.log(canvasData)
+    console.log(canvasData)
   }
 </script>

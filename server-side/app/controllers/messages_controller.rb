@@ -2,7 +2,7 @@ class MessagesController < ApplicationController
   skip_before_action :verify_authenticity_token, only: :destroy
 
   def home
-    @recent_messages = Message.last(5)
+    @recent_messages = Message.not_private.last(5)
   end
 
   def create
@@ -33,6 +33,6 @@ class MessagesController < ApplicationController
   private
 
   def message_params
-    params.require(:message).permit(:text, :image, :printed)
+    params.require(:message).permit(:text, :image, :printed, :private)
   end
 end
