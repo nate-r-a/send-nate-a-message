@@ -1,7 +1,9 @@
 class MessagesController < ApplicationController
   skip_before_action :verify_authenticity_token, only: :destroy
 
-  def home; end
+  def home
+    @recent_messages = Message.last(5)
+  end
 
   def create
     Message.create(message_params)

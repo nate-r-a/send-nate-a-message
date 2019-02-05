@@ -1,10 +1,7 @@
 <head>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
-  <!-- <link type="text/javascript" href="jquery-3.2.1.min.js"> -->
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.3.0/milligram.css">
-  <!-- <link rel="stylesheet" href="omni-slider.min.css"> -->
-  <!-- <script type="text/javascript" src="omni-slider.min.js"></script> -->
 
   <script src="https://unpkg.com/konva@2.4.2/konva.min.js"></script>
 
@@ -34,6 +31,13 @@
     .selected {
       outline: 10px solid dodgerblue;
     }
+
+    .recent-message {
+      /* width: 192px; */
+      border: 2px solid black;
+      max-width: 160px;
+      max-height: 160px;
+    }
   </style>
 
 </head>
@@ -42,15 +46,18 @@
     <div class="alert alert-<%= key %>"><%= value %></div>
   <% end %>
 
-  <h1>Send Nate a message!</h1>
-  <h6>Please don't hack me</h6>
+  <h1 style="margin: 0;">Send Nate a message!</h1>
+  <h4>Please don't hack me</h4>
   <br>
-  <input id="text-message" type="text" name="" value="" placeholder="Enter a text message here (if you want)" style="width: 384px;">
-  <br>
+
+  <div class="recent-messages">
+    <div>Recent messages:</div>
+    <% @recent_messages.each do |message| %>
+      <img class="recent-message" src="<%= message.image %>">
+    <% end %>
+  </div>
 
   <div><span onclick="showDraw()"><strong>Click here</strong></span> to draw a picture, or <span onclick="showUpload()"><strong>click here</strong></span> to upload an image</div>
-
-  <!-- <img src="https://media.giphy.com/media/S5JSwmQYHOGMo/giphy.gif" alt=""> -->
 
   <div id="draw-a-picture">
     Tool:
@@ -167,7 +174,8 @@
   <div id="upload-a-picture">
     <input type="file" id="imageLoader" name="imageLoader"/>
     <br>
-    <div id="top-canvases">
+    <span id="dithering-message"></span>
+    <div style="display: inline-flex;" id="top-canvases">
       <canvas id="imageCanvas" width="384" height="384"></canvas>
       <canvas onclick="selectCanvas(this)" class="canvas" id="atkinsonCanvas" width="384" height="384"></canvas>
     </div>
@@ -235,17 +243,20 @@
       var bayerContext = bayerCanvas.getContext('2d');
       var atkinsonContext = atkinsonCanvas.getContext('2d');
 
+      var addMessage = true;
       function handleImage(e){
         document.getElementById('atkinsonCanvas').classList.add('selected');
-        $("#top-canvases").prepend("<div><b>Select</b> one of the dithering options below. <b>Atkinson dithering</b> (top-right) is recommended</div>")
+
+        if (addMessage) {
+          $("#dithering-message").append("<div><b>Select</b> one of the dithering options below. <b>Atkinson dithering</b> (top-right) is recommended.</div>")
+          addMessage = false;
+        }
 
         var reader = new FileReader();
         reader.onload = function(event){
           var img = new Image();
 
           img.onload = function(){
-            // console.log(img.width);
-            // console.log(img.height);
             if (img.width > img.height) {
               let coeff = img.width / 384;
               img.width = 384;
@@ -281,10 +292,10 @@
       }
     </script>
   </div>
-
-    <br>
-    <input type="submit" name="submit" value="Send!" onclick="submitMessage()">
-
+  <br>
+  <input id="text-message" type="text" name="" value="" placeholder="Enter a text message here (if you want)" style="width: 600px;">
+  <br>
+  <input type="submit" name="submit" value="Send!" onclick="submitMessage()">
 </body>
 
 <script type="text/javascript">
