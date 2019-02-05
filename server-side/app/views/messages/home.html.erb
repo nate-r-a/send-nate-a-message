@@ -3,7 +3,7 @@
 
   <!-- <link type="text/javascript" href="jquery-3.2.1.min.js"> -->
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.3.0/milligram.css">
-  <link rel="stylesheet" href="omni-slider.min.css">
+  <!-- <link rel="stylesheet" href="omni-slider.min.css"> -->
   <!-- <script type="text/javascript" src="omni-slider.min.js"></script> -->
 
   <script src="https://unpkg.com/konva@2.4.2/konva.min.js"></script>
@@ -30,6 +30,10 @@
     .slider-circle {
       display: none !important;
     }
+
+    .selected {
+      outline: 10px solid dodgerblue;
+    }
   </style>
 
 </head>
@@ -41,7 +45,7 @@
   <h1>Send Nate a message!</h1>
   <h6>Please don't hack me</h6>
   <br>
-  <input id="text-message" type="text" name="" value="" placeholder="Enter a text message here (optional)" style="width: 384px;">
+  <input id="text-message" type="text" name="" value="" placeholder="Enter a text message here (if you want)" style="width: 384px;">
   <br>
 
   <div><span onclick="showDraw()"><strong>Click here</strong></span> to draw a picture, or <span onclick="showUpload()"><strong>click here</strong></span> to upload an image</div>
@@ -163,39 +167,43 @@
   <div id="upload-a-picture">
     <input type="file" id="imageLoader" name="imageLoader"/>
     <br>
-    <div>
+    <div id="top-canvases">
       <canvas id="imageCanvas" width="384" height="384"></canvas>
-      <canvas id="atkinsonCanvas" width="384" height="384"></canvas>
+      <canvas onclick="selectCanvas(this)" class="canvas" id="atkinsonCanvas" width="384" height="384"></canvas>
     </div>
-    <div>
-      <canvas id="thresholdCanvas" width="384" height="384"></canvas>
-      <div id="threshold-slider"></div>
-      <canvas id="bayerCanvas" width="384" height="384"></canvas>
-      <div id="bayer-slider"></div>
+    <div style="display: inline-flex;">
+      <div>
+        <canvas onclick="selectCanvas(this)" class="canvas" id="thresholdCanvas" width="384" height="384"></canvas>
+        <div class="slider-container" id="threshold-slider"></div>
+      </div>
+      <div>
+        <canvas onclick="selectCanvas(this)" class="canvas" id="bayerCanvas" width="384" height="384"></canvas>
+        <div class="slider-container" id="bayer-slider"></div>
+      </div>
     </div>
 
     <script>
       options = {
           isOneWay: true,
           isDate: false,
-          min: 1,
-          max: 255,
-          start: 130
+          min: 50,
+          max: 150,
+          start: 100
       };
       var thresholdSlider = new Slider(document.getElementById('threshold-slider'), options);
 
       options = {
           isOneWay: true,
           isDate: false,
-          min: 1,
-          max: 255,
-          start: 130
+          min: 50,
+          max: 150,
+          start: 100
       };
       var bayerSlider = new Slider(document.getElementById('bayer-slider'), options);
 
       //  TODO: REFACTOR THIS MESS
       thresholdSlider.subscribe('moving', function(data) {
-        console.log(data.right);
+        // console.log(data.right);
         var thresholdCanvas = document.getElementById('thresholdCanvas');
         var thresholdContext = thresholdCanvas.getContext('2d');
         i2 = imageContext.getImageData(0, 0, imageCanvas.width, imageCanvas.height);
@@ -204,7 +212,7 @@
       });
 
       bayerSlider.subscribe('moving', function(data) {
-        console.log(data.right);
+        // console.log(data.right);
         var bayerCanvas = document.getElementById('bayerCanvas');
         var bayerContext = bayerCanvas.getContext('2d');
         i2 = imageContext.getImageData(0, 0, imageCanvas.width, imageCanvas.height);
@@ -228,6 +236,9 @@
       var atkinsonContext = atkinsonCanvas.getContext('2d');
 
       function handleImage(e){
+        document.getElementById('atkinsonCanvas').classList.add('selected');
+        $("#top-canvases").prepend("<div><b>Select</b> one of the dithering options below. <b>Atkinson dithering</b> (top-right) is recommended</div>")
+
         var reader = new FileReader();
         reader.onload = function(event){
           var img = new Image();
@@ -255,7 +266,7 @@
 
             atkinsonImage = new CanvasDither().atkinson(i1);
             thresholdImage = new CanvasDither().threshold(i2, 100);
-            bayerImage = new CanvasDither().bayer(i3, 140);
+            bayerImage = new CanvasDither().bayer(i3, 100);
 
             atkinsonContext.putImageData(atkinsonImage, 0, 0, 0, 0, img.width, img.height);
             thresholdContext.putImageData(thresholdImage, 0, 0, 0, 0, img.width, img.height);
@@ -293,25 +304,36 @@
     upload = true;
   }
 
+  function selectCanvas(element) {
+    canvases = document.querySelectorAll(".canvas")
+
+    canvases.forEach(function(canvas) {
+      canvas.classList.remove('selected');
+    });
+
+    console.log(element)
+    element.classList.add('selected')
+  }
+
   function submitMessage() {
     var canvasData;
     if (upload) {
-      canvasData = document.getElementById("atkinsonCanvas").toDataURL();
-      var image = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
-      window.location.href=image; // it will save locally
+      canvasData = document.querySelector('.selected').toDataURL();
+      // var image = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+      // window.location.href=image; // it will save locally
 
     } else {
       canvasData = canvas.toDataURL();
     }
-    // $.ajax({
-    //   url: "/messages",
-    //   type: "POST",
-    //   beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
-    //   data: { message: {
-    //     text: $("#text-message").val(),
-    //     image: canvasData
-    //   }}
-    // })
+    $.ajax({
+      url: "/messages",
+      type: "POST",
+      beforeSend: function(xhr) {xhr.setRequestHeader('X-CSRF-Token', $('meta[name="csrf-token"]').attr('content'))},
+      data: { message: {
+        text: $("#text-message").val(),
+        image: canvasData
+      }}
+    })
     // console.log(canvasData)
   }
 </script>
