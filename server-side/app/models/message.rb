@@ -1,5 +1,4 @@
 class Message < ApplicationRecord
-  def sanitized_text
-    
-  end
+  scope :unprinted, -> { where(printed: false) }
+  scope :not_private, -> { where(private: false) }
 end
